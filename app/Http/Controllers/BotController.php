@@ -81,12 +81,13 @@ class BotController extends Controller
 
     public function execute(Bot $bot)
     {
-        $scriptPath = storage_path("app/temp_bot_{$bot->id}.js");
+        $scriptPath = storage_path("app/temp_bot_{$bot->id}.py"); // .py, não .js
         $logPath = storage_path("app/bot_logs/bot_{$bot->id}.log");
 
         File::put($scriptPath, $bot->codigo);
 
-        BotRunner::run($bot->id, $scriptPath, $logPath, 'node');
+        // Executa como Python
+        BotRunner::run($bot->id, $scriptPath, $logPath, 'python');
 
         return response()->json(['success' => true]);
     }

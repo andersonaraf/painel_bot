@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 
 class BotRunner
 {
-    public static function run($botId, $scriptPath, $logPath, $language = 'node')
+    public static function run($botId, $scriptPath, $logPath, $language = 'python')
     {
         $pidPath = storage_path("app/bot_pids/bot_{$botId}.pid");
 
@@ -14,15 +14,15 @@ class BotRunner
         File::ensureDirectoryExists(dirname($pidPath));
 
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            // Executa o bot em background e salva log (Windows)
+            // Executa o bot em background no Windows
 
-            // Executa em segundo plano
+            // Executa o processo Python e redireciona o log
             $cmd = "cmd /C start /B cmd /C \"{$language} {$scriptPath} > {$logPath} 2>&1\"";
             pclose(popen($cmd, "r"));
 
-            // Aguarda processo iniciar e pega o último PID do Node
-            sleep(1); // Tempo mínimo pro processo iniciar
-            exec("wmic process where \"CommandLine like '%{$scriptPath}%' and name='{$language}.exe'\" get ProcessId /value", $output);
+            // Aguarda e captura o PID do processo com o caminho do script
+            sleep(1);
+            exec("wmic process where \"CommandLine like '%{$scriptPath}%' and name='python.exe'\" get ProcessId /value", $output);
 
             $pidLine = collect($output)->first(fn($line) => str_contains($line, 'ProcessId='));
             $pid = trim(str_replace('ProcessId=', '', $pidLine ?? ''));
@@ -32,8 +32,8 @@ class BotRunner
             }
 
         } else {
-            // Executa em segundo plano (Linux/macOS)
-            $cmd = "{$language} \"$scriptPath\" > \"$logPath\" 2>&1 & echo $! > \"$pidPath\"";
+            // Executa no Linux/macOS
+            $cmd = "python3 \"$scriptPath\" > \"$logPath\" 2>&1 & echo $! > \"$pidPath\"";
             exec($cmd);
         }
     }
